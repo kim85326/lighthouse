@@ -2,27 +2,21 @@
 
 set -e
 
-CHROME_FLAGS=${CHROME_FLAGS:-"--headless --disable-gpu --no-sandbox"}
+lighthouse --timeout=60000 --enable-error-reporting --chrome-flags="--headless --no-sandbox --allow-running-insecure-content --disable-dev-shm-usage" $@ --output json --output html --output-path="/home/chrome/reports/lighthouse"
 
-# first arg is `-f` or `--some-option`
-if [ "${1#http}" != "$1" ]; then
-    set -- lighthouse --enable-error-reporting --chrome-flags="${CHROME_FLAGS}" "$@" --output=json --output-path=/home/chrome/reports/result.json
-fi
-
-# Execute the lighthouse command
-"$@"
+REPORT_JSON_FILE="/home/chrome/reports/lighthouse.report.json"
 
 # 使用 jq 從 JSON 報告中提取各個指標的分數
-PERFORMANCE_SCORE=$(cat /home/chrome/reports/result.json | jq '.categories.performance.score * 100')
-ACCESSIBILITY_SCORE=$(cat /home/chrome/reports/result.json | jq '.categories.accessibility.score * 100')
-BEST_PRACTICES_SCORE=$(cat /home/chrome/reports/result.json | jq '.categories."best-practices".score * 100')
-SEO_SCORE=$(cat /home/chrome/reports/result.json | jq '.categories.seo.score * 100')
+PERFORMANCE_SCORE=$(jq '.categories.performance.score * 100' "$REPORT_JSON_FILE")
+ACCESSIBILITY_SCORE=$(jq '.categories.accessibility.score * 100' "$REPORT_JSON_FILE")
+BEST_PRACTICES_SCORE=$(jq '.categories."best-practices".score * 100' "$REPORT_JSON_FILE")
+SEO_SCORE=$(jq '.categories.seo.score * 100' "$REPORT_JSON_FILE")
 
-FCP_SCORE=$(cat /home/chrome/reports/result.json | jq '.audits."first-contentful-paint".score')
-LCP_SCORE=$(cat /home/chrome/reports/result.json | jq '.audits."largest-contentful-paint".score')
-TBT_SCORE=$(cat /home/chrome/reports/result.json | jq '.audits."total-blocking-time".score')
-CLS_SCORE=$(cat /home/chrome/reports/result.json | jq '.audits."cumulative-layout-shift".score')
-SI_SCORE=$(cat /home/chrome/reports/result.json | jq '.audits."speed-index".score')
+FCP_SCORE=$(jq '.audits."first-contentful-paint".score' "$REPORT_JSON_FILE")
+LCP_SCORE=$(jq '.audits."largest-contentful-paint".score' "$REPORT_JSON_FILE")
+TBT_SCORE=$(jq '.audits."total-blocking-time".score' "$REPORT_JSON_FILE")
+CLS_SCORE=$(jq '.audits."cumulative-layout-shift".score' "$REPORT_JSON_FILE")
+SI_SCORE=$(jq '.audits."speed-index".score' "$REPORT_JSON_FILE")
 
 echo "Performance Score: $PERFORMANCE_SCORE"
 echo "Accessibility Score: $ACCESSIBILITY_SCORE"
@@ -36,23 +30,22 @@ echo "Cumulative Layout Shift Score: $CLS_SCORE"
 echo "Speed Index Score: $SI_SCORE"
 echo "-------------------------"
 
-# 檢查每個分數是否低於給定的最低分數
-if (( PERFORMANCE_SCORE < MIN_PERFORMANCE_SCORE )); then
+if awk "BEGIN {exit !($PERFORMANCE_SCORE < $MIN_PERFORMANCE_SCORE)}"; then
     echo "Failed: Performance Score is below the minimum required"
     exit 1
 fi
 
-if (( ACCESSIBILITY_SCORE < MIN_ACCESSIBILITY_SCORE )); then
+if awk "BEGIN {exit !($ACCESSIBILITY_SCORE < $MIN_ACCESSIBILITY_SCORE)}"; then
     echo "Failed: Accessibility Score is below the minimum required"
     exit 1
 fi
 
-if (( BEST_PRACTICES_SCORE < MIN_BEST_PRACTICES_SCORE )); then
+if awk "BEGIN {exit !($BEST_PRACTICES_SCORE < $MIN_BEST_PRACTICES_SCORE)}"; then
     echo "Failed: Best-practices Score is below the minimum required"
     exit 1
 fi
 
-if (( SEO_SCORE < MIN_SEO_SCORE )); then
+if awk "BEGIN {exit !($SEO_SCORE < $MIN_SEO_SCORE)}"; then
     echo "Failed: SEO Score is below the minimum required"
     exit 1
 fi

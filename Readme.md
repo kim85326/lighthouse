@@ -19,5 +19,16 @@ docker run \
   -e MIN_BEST_PRACTICES_SCORE=50 \
   -e MIN_SEO_SCORE=50 \
     elaine-lighthouse \
-    https://kim85326.github.io/
+    "https://kim85326.github.io/"
+```
+
+```
+docker run -it --name lighthouse -v $PWD/reports:/home/chrome/reports elaine-lighthouse /bin/bash
+```
+```
+export MIN_PERFORMANCE_SCORE=80
+export MIN_ACCESSIBILITY_SCORE=90
+export MIN_BEST_PRACTICES_SCORE=90
+export MIN_SEO_SCORE=90
+./entrypoint.sh "https://kim85326.github.io/"
 ```
