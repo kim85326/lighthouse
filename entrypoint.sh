@@ -2,9 +2,11 @@
 
 set -e
 
-lighthouse --timeout=60000 --enable-error-reporting --chrome-flags="--headless --no-sandbox --allow-running-insecure-content --disable-dev-shm-usage" $@ --output json --output html --output-path="/home/chrome/reports/lighthouse"
+OUTPUT_DIR=${OUTPUT_DIR:-"/home/chrome/reports"}
 
-REPORT_JSON_FILE="/home/chrome/reports/lighthouse.report.json"
+lighthouse --timeout=60000 --enable-error-reporting --chrome-flags="--headless --no-sandbox --allow-running-insecure-content --disable-dev-shm-usage" $@ --output json --output html --output-path="$OUTPUT_DIR/lighthouse"
+
+REPORT_JSON_FILE="$OUTPUT_DIR/lighthouse.report.json"
 
 # 使用 jq 從 JSON 報告中提取各個指標的分數
 PERFORMANCE_SCORE=$(jq '.categories.performance.score * 100' "$REPORT_JSON_FILE")

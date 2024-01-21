@@ -18,6 +18,7 @@ docker run \
   -e MIN_ACCESSIBILITY_SCORE=50 \
   -e MIN_BEST_PRACTICES_SCORE=50 \
   -e MIN_SEO_SCORE=50 \
+  -e OUTPUT_DIR="/home/chrome/elaine" \
     elaine-lighthouse \
     "https://kim85326.github.io/"
 ```
